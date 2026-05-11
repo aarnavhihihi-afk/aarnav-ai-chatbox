@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AARNAV'S AI ASSISTANT</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 3px solid #764ba2;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        #chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .message.user {
+            text-align: right;
+        }
+        
+        .message.assistant {
+            text-align: left;
+        }
+        
+        .message-bubble {
+            display: inline-block;
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        
+        .user .message-bubble {
+            background: #667eea;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .assistant .message-bubble {
+            background: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        #msg {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 50px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        #msg:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        #sendBtn {
+            background: #667eea;
+            color: white;
+            padding: 12px 28px;
+        }
+        
+        #sendBtn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        #voiceBtn, #clearBtn {
+            background: #48bb78;
+            color: white;
+            padding: 12px 18px;
+            font-size: 18px;
+        }
+        
+        #voiceBtn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+        
+        #voiceBtn.listening {
+            background: #f56565;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        #clearBtn {
+            background: #ed8936;
+        }
+        
+        #clearBtn:hover {
+            background: #dd6b20;
+        }
+        
+        .voice-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: none;
+            margin-right: 8px;
+        }
+        
+        #voiceBtn.listening .voice-indicator {
+            animation: pulse 1s infinite;
+        }
+        
+        .app-opener {
+            background: #fc8181;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+        
+        .app-opener:hover {
+            background: #f56565;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            color: #999;
+            text-align: center;
+        }
+
+        .empty-state p {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state small {
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AARNAV'S AI ASSISTANT</h1>
+            <p>AI with Voice, App Control & Conversation</p>
+            <p style="font-size: 12px; margin-top: 10px; opacity: 0.8;">Made by Aarnav IX</p>
+        </div>
+        
+        <div id="chat">
+            <div class="empty-state">
+                <p>Welcome! Start chatting or use voice input</p>
+                <small>Type a message, click the mic button, or say "open [app name]" to launch apps</small>
+            </div>
+        </div>
+        
+        <div class="input-area">
+            <input 
+                type="text" 
+                id="msg" 
+                placeholder="Ask me anything... or 'open notepad', 'open calculator'..."
+                autocomplete="off"
+            >
+            <div class="controls">
+                <button id="voiceBtn" title="Click to use voice">🎤 Voice</button>
+                <button id="listenBtn" onclick="playLastResponse()" title="Listen to last response" style="background: #2ed573;">🔊 Listen</button>
+                <button id="stopSpeechBtn" onclick="stopSpeech()" title="Stop speech" style="background: #ff4757;">⏹️ Stop</button>
+                <button id="newTopicBtn" onclick="startNewTopic()" title="Start a new conversation topic" style="background: #ffa502;">🆕 New Topic</button>
+                <button id="sendBtn" onclick="send()">Send</button>
+                <button id="clearBtn" onclick="clearHistory()" title="Clear chat history">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isListening = false;
+        let voiceEnabled = false;
+        let lastAssistantMessage = "";
+        let chatContainer = document.getElementById("chat");
+        let msgInput = document.getElementById("msg");
+        let voiceBtn = document.getElementById("voiceBtn");
+
+        // Check for speech recognition support
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+        if (recognition) {
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = () => {
+                isListening = true;
+                voiceBtn.classList.add("listening");
+                voiceBtn.textContent = "🎤 Listening...";
+            };
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    transcript += event.results[i][0].transcript;
+                }
+                msgInput.value = transcript;
+            };
+
+            recognition.onend = () => {
+                isListening = false;
+                voiceBtn.classList.remove("listening");
+                voiceBtn.textContent = "🎤 Voice";
+            };
+
+            recognition.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                voiceBtn.classList.remove("listening");
+                voiceBtn.textContent = "🎤 Voice";
+                isListening = false;
+            };
+        }
+
+        voiceBtn.onclick = () => {
+            if (!recognition) {
+                alert("Speech recognition not supported in your browser");
+                return;
+            }
+            
+            if (isListening) {
+                recognition.stop();
+                isListening = false;
+                voiceBtn.classList.remove("listening");
+                voiceBtn.textContent = "🎤 Voice";
+            } else {
+                msgInput.value = '';
+                recognition.start();
+            }
+        };
+
+        msgInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                send();
+            }
+        });
+
+        async function send() {
+            let message = msgInput.value.trim();
+            
+            if (!message) return;
+
+            // Clear input
+            msgInput.value = '';
+
+            // Display user message
+            addMessage(message, 'user');
+
+            try {
+                // Check if message should have voice
+                let useVoice = voiceEnabled || confirm("Enable voice response?");
+
+                let res = await fetch("/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        message: message,
+                        voice: useVoice
+                    })
+                });
+
+                let data = await res.json();
+
+                if (data.type === 'app') {
+                    addMessage(data.reply, 'assistant', true);
+                } else {
+                    addMessage(data.reply, 'assistant');
+                }
+
+            } catch (error) {
+                addMessage("Error: Could not get response. Check your API key.", 'assistant');
+                console.error(error);
+            }
+        }
+
+        function addMessage(text, sender, isApp = false) {
+            if (chatContainer.querySelector('.empty-state')) {
+                chatContainer.innerHTML = '';
+            }
+
+            // Store last assistant message for listening
+            if (sender === 'assistant' && !isApp) {
+                lastAssistantMessage = text;
+            }
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            
+            if (isApp) {
+                bubble.style.background = '#c3dafe';
+                bubble.style.color = '#2d3748';
+                bubble.innerHTML = '🚀 ' + text;
+            } else {
+                bubble.textContent = text;
+            }
+            
+            messageDiv.appendChild(bubble);
+            
+            const timestamp = document.createElement('div');
+            timestamp.className = 'timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString();
+            messageDiv.appendChild(timestamp);
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        async function clearHistory() {
+            if (confirm("Are you sure you want to clear chat history?")) {
+                await fetch("/clear-history", { method: "POST" });
+                chatContainer.innerHTML = '<div class="empty-state"><p>Chat cleared! Start fresh</p></div>';
+            }
+        }
+
+        async function stopSpeech() {
+            // Stop browser speech
+            window.speechSynthesis.cancel();
+            
+            try {
+                let res = await fetch("/stop_speech", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                let result = await res.json();
+                if (result.success) {
+                    console.log("Speech stopped successfully");
+                } else {
+                    console.log("Failed to stop speech");
+                }
+            } catch (error) {
+                console.error("Error stopping speech:", error);
+            }
+        }
+
+        async function playLastResponse() {
+            if (!lastAssistantMessage) {
+                alert("No response to listen to yet. Ask me something first!");
+                return;
+            }
+            
+            // Use browser's Web Speech API
+            const utterance = new SpeechSynthesisUtterance(lastAssistantMessage);
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+            
+            window.speechSynthesis.cancel(); // Stop any ongoing speech
+            window.speechSynthesis.speak(utterance);
+            
+            console.log("Playing audio...");
+        }
+
+        async function startNewTopic() {
+            if (confirm("Start a new conversation topic? The AI will forget previous context but messages will stay visible.")) {
+                try {
+                    let res = await fetch("/new-topic", {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    let result = await res.json();
+                    if (result.success) {
+                        // Add a separator message
+                        addMessage("🆕 --- New Conversation Started ---", 'assistant');
+                        console.log("New topic started");
+                    } else {
+                        alert("Failed to start new topic");
+                    }
+                } catch (error) {
+                    console.error("Error starting new topic:", error);
+                    alert("Error starting new topic");
+                }
+            }
+        }
+
+        // Load history on page load
+        async function loadHistory() {
+            try {
+                let res = await fetch("/history");
+                let history = await res.json();
+                
+                if (history.length > 0) {
+                    chatContainer.innerHTML = '';
+                    history.forEach(item => {
+                        addMessage(item.user, 'user');
+                        addMessage(item.assistant, 'assistant', item.type === 'app');
+                    });
+                }
+            } catch (error) {
+                console.error("Could not load history:", error);
+            }
+        }
+
+        // Load history when page loads
+        // Commented out to start fresh without old chat history
+        // window.addEventListener('load', loadHistory);
+    </script>
+</body>
+</html>
